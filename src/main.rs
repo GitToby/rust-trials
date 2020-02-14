@@ -1,38 +1,76 @@
 use std::io;
+use crate::models::Move::{*};
+use crate::models::GameResult::{*};
+use crate::models::Move;
 use rand::Rng;
-use std::cmp::Ordering;
+
+mod models;
 
 fn main() {
-    println!("Guessing Game!");
-    println!("--------------");
-
-    let number: i32 = rand::thread_rng().gen_range(-100, 101); // Random # -100 -> 100
-    let mut guesses: i32 = 0; // init the guess count value
-
+    let mut random_generator = rand::thread_rng();
+    let mut wins = 0;
+    let mut draws = 0;
+    let mut losses = 0;
     loop {
-        println!("Guess the number:");
-        let mut guess: String = String::new(); // init he guess value as a string, for reading
+        println!("Rock paper scissors, GO!");
+        println!("1) {:?}", Rock);
+        println!("2) {:?}", Paper);
+        println!("3) {:?}", Scissors);
+        println!();
 
-        io::stdin().read_line(&mut guess) // read the string in, if it fails, we have an error message
-            .expect("Something went wrong!");
+        let mut input: String = String::from("");
 
-        let guess: i32 = match guess.trim().parse::<i32>() { // try to parse the guess to an int
-            Err(_) => { // on a failed parse
-                println!("must be number!");
+        let player_move: Move = match io::stdin().read_line(&mut input) {
+            Ok(_) => {
+                let value = input.trim().parse::<i32>().unwrap();
+                match Move::from_int(value) {
+                    Ok(result) => result,
+                    Err(e) => {
+                        println!("{}", e);
+                        continue;
+                    }
+                }
+            }
+            Err(e) => {
+                println!("{:?}", e);
                 continue;
             }
-            Ok(num) => num // if valid just return the number to the guess object
         };
 
-        match guess.cmp(&number) { // this is essentially a switch statement as there's no return value
-            Ordering::Less => println!("you're guessing too low"), // match the return of .cmp() to a "type"(?)
-            Ordering::Greater => println!("you're guessing too high"),
-            Ordering::Equal => {
-                println!("You win after {} attempts! the number was {}", guesses, number);
-                break; // breaks the loop
+        println!("You picked {:?}", player_move);
+
+        let opponent = Move::from_int(random_generator.gen_range(1, 4)).unwrap();
+
+        println!("{:?} vs {:?}", player_move, opponent);
+
+        match player_move.beats(&opponent) {
+            Win => {
+                println!("You Win!");
+                wins += 1;
             }
+            Lose => {
+                println!("You Lose :(");
+                losses += 1;
+            }
+            Draw => {
+                println!("Draw");
+                draws += 1;
+            }
+        };
+
+        while !["y", "n"].contains(&input.trim()) {
+            println!("again? (y/n)");
+            input = "".to_string();
+            io::stdin().read_line(&mut input).expect("failed :(");
         }
-        guesses += 1;
-        println!()
-    };
+
+        if input.trim() == "n" {
+            let total = wins + losses + draws;
+            println!("Wins: {} of {} ({}%)", wins, total, 100 * wins / total);
+            println!("Loses: {} of {} ({}%)", losses, total, 100 * losses / total);
+            println!("Draws: {} of {} ({}%)", draws, total, 100 * draws / total);
+            break;
+        }
+    }
 }
+
