@@ -1,6 +1,5 @@
-use crate::models::GameResult::{Draw, Lose, Win};
-use crate::models::Move::{Rock, Paper, Scissors};
-use std::fmt::Error;
+use crate::games::rps::models::GameResult::{Lose, Draw, Win};
+use crate::games::rps::models::Move::{Rock, Paper, Scissors};
 
 #[derive(Debug)]
 pub enum Move {
